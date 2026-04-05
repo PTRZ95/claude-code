@@ -1,0 +1,16 @@
+{
+  "name": "twitch-bits-keyboard-backend",
+  "version": "1.0.0",
+  "description": "EBS Backend fuer die Twitch Bits Keyboard Extension",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.0"
+  }
+}
