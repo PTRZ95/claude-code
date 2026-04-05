@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Untertitel - Sprachwahl</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="panel">
+    <header>
+      <h1>Live Untertitel</h1>
+      <p class="subtitle-hint">Wähle deine Sprache für die Untertitel</p>
+    </header>
+
+    <div class="controls">
+      <div class="language-select">
+        <label for="lang-picker">Sprache / Language:</label>
+        <select id="lang-picker">
+          <option value="off">-- Deaktiviert / Off --</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-subtitles" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Untertitel aktiv</span>
+      </div>
+    </div>
+
+    <div id="subtitle-display">
+      <div id="live-subtitle" class="live-subtitle"></div>
+      <div id="live-partial" class="live-partial"></div>
+    </div>
+
+    <div id="history" class="history">
+      <h3>Verlauf</h3>
+      <ul id="history-list"></ul>
+    </div>
+
+    <footer>
+      <span id="status" class="status disconnected">Getrennt</span>
+    </footer>
+  </div>
+  <script src="panel.js"></script>
+</body>
+</html>

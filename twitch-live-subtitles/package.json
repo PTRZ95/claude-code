@@ -1,0 +1,23 @@
+{
+  "name": "twitch-live-subtitles",
+  "version": "1.0.0",
+  "description": "Real-time speech-to-text translation subtitles for Twitch streams",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "download-model": "bash scripts/download-model.sh"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "node-record-lpcm16": "^1.0.1",
+    "tmi.js": "^1.8.5",
+    "vosk": "^0.3.45",
+    "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
