@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "download-model": "bash scripts/download-model.sh"
+    "download-model": "node scripts/download-model.mjs",
+    "download-model:bash": "bash scripts/download-model.sh",
+    "download-model:win": "powershell -ExecutionPolicy Bypass -File scripts/download-model.ps1"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
