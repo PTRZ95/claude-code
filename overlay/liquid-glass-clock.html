@@ -3,159 +3,259 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Liquid Glass Clock Overlay</title>
+<title>Liquid Glass Clock — Stream Overlay</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600&display=swap');
+  /*  ╔══════════════════════════════════════════════════════════════╗
+      ║              CUSTOMIZATION / ANPASSUNGEN                    ║
+      ║  Change these variables to personalize your overlay.        ║
+      ║  Works in OBS Browser Source & StreamElements Custom Widget ║
+      ╚══════════════════════════════════════════════════════════════╝  */
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  :root {
+    /* ── POSITION ── */
+    --overlay-x: center;            /* left, center, right  */
+    --overlay-y: center;            /* top, center, bottom  */
+    --offset-x: 0px;               /* fine-tune horizontal  */
+    --offset-y: 0px;               /* fine-tune vertical    */
+
+    /* ── GLASS PANEL ── */
+    --glass-bg: rgba(200, 205, 215, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.50);
+    --glass-blur: 32px;
+    --glass-radius: 28px;
+    --glass-padding-x: 52px;
+    --glass-padding-y: 32px;
+    --glass-shadow-light: rgba(255, 255, 255, 0.85);
+    --glass-shadow-dark: rgba(160, 165, 180, 0.45);
+    --glass-inner-shadow-light: rgba(255, 255, 255, 0.60);
+    --glass-inner-shadow-dark: rgba(160, 165, 180, 0.25);
+
+    /* ── TIME ── */
+    --time-font-size: 64px;
+    --time-color: rgba(255, 255, 255, 0.95);
+    --time-font-weight: 400;
+    --time-letter-spacing: 2px;
+    --time-text-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    /* ── SECONDS ── */
+    --seconds-show: inline;         /* inline = show, none = hide */
+    --seconds-font-size: 30px;
+    --seconds-opacity: 0.7;
+
+    /* ── DATE ── */
+    --date-show: block;             /* block = show, none = hide */
+    --date-font-size: 18px;
+    --date-color: rgba(255, 255, 255, 0.75);
+    --date-font-weight: 400;
+    --date-letter-spacing: 0.8px;
+    --date-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    /* ── SEPARATOR LINE ── */
+    --separator-show: none;         /* block = show, none = hide */
+    --separator-color: rgba(255, 255, 255, 0.35);
+    --separator-width: 50px;
+    --separator-margin: 12px;
+
+    /* ── SPECULAR HIGHLIGHT (top shine) ── */
+    --highlight-opacity: 0.40;
+    --highlight-height: 45%;
+
+    /* ── SHIMMER ANIMATION ── */
+    --shimmer-show: block;          /* block = show, none = hide */
+    --shimmer-speed: 8s;
+    --shimmer-intensity: 0.05;
+
+    /* ── ENTRANCE ANIMATION ── */
+    --entrance-duration: 0.8s;
+
+    /* ── BACKGROUND (for preview — transparent in OBS) ── */
+    --preview-bg: #c8ccd4;
+    --dot-show: block;              /* block = show, none = hide */
+    --dot-color: rgba(255, 255, 255, 0.25);
+    --dot-size: 2px;
+    --dot-gap: 22px;
+
+    /* ── LANGUAGE ── */
+    /* de = Deutsch, en = English, fr = Français, es = Español */
+    --language: "de";
+
+    /* ── TIME FORMAT ── */
+    /* 24 = 24h format,  12 = 12h format (AM/PM) */
+    --time-format: 24;
   }
 
+  /* ══════════════════════════════════════════════════════════════
+     DO NOT EDIT BELOW — unless you know what you're doing :)
+     ══════════════════════════════════════════════════════════════ */
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--preview-bg);
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
     overflow: hidden;
+    display: flex;
+    align-items: var(--overlay-y);
+    justify-content: var(--overlay-x);
+  }
+
+  /* Dot pattern background (preview only — transparent in OBS) */
+  body::before {
+    content: '';
+    display: var(--dot-show);
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--dot-color) var(--dot-size), transparent var(--dot-size));
+    background-size: var(--dot-gap) var(--dot-gap);
+    pointer-events: none;
+    z-index: 0;
   }
 
   .glass-container {
     position: relative;
-    padding: 24px 40px;
-    border-radius: 28px;
+    padding: var(--glass-padding-y) var(--glass-padding-x);
+    border-radius: var(--glass-radius);
+    transform: translate(var(--offset-x), var(--offset-y));
+    z-index: 1;
+
+    /* Frosted glass fill */
     background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0.06) 40%,
-      rgba(255, 255, 255, 0.12) 100%
+      160deg,
+      var(--glass-bg) 0%,
+      rgba(220, 223, 230, 0.35) 50%,
+      var(--glass-bg) 100%
     );
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+
+    /* Border */
+    border: 1.5px solid var(--glass-border);
+
+    /* Neumorphic outer + inner shadows */
     box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
-      0 0 0 0.5px rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    animation: floatIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      /* outer light (top-left) */
+      -6px -6px 16px var(--glass-shadow-light),
+      /* outer dark (bottom-right) */
+      6px 6px 20px var(--glass-shadow-dark),
+      /* inner light (top-left) */
+      inset -3px -3px 8px var(--glass-inner-shadow-light),
+      /* inner dark (bottom-right) */
+      inset 3px 3px 8px var(--glass-inner-shadow-dark);
+
+    /* Entrance animation */
+    animation: floatIn var(--entrance-duration) cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
-    transform: translateY(10px) scale(0.97);
+    transform: translate(var(--offset-x), var(--offset-y)) translateY(8px) scale(0.98);
+    overflow: hidden;
   }
 
   @keyframes floatIn {
     to {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translate(var(--offset-x), var(--offset-y)) translateY(0) scale(1);
     }
   }
 
-  /* Specular highlight — top edge shine */
+  /* ── Specular highlight (top edge shine) ── */
   .glass-container::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 10%;
-    right: 10%;
-    height: 50%;
+    left: 8%;
+    right: 8%;
+    height: var(--highlight-height);
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.35) 0%,
-      rgba(255, 255, 255, 0.08) 40%,
+      rgba(255, 255, 255, var(--highlight-opacity)) 0%,
+      rgba(255, 255, 255, 0.10) 35%,
       transparent 100%
     );
-    border-radius: 28px 28px 50% 50%;
+    border-radius: var(--glass-radius) var(--glass-radius) 50% 50%;
     pointer-events: none;
+    z-index: 2;
   }
 
-  /* Soft refraction edge glow */
-  .glass-container::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 29px;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.25) 0%,
-      transparent 30%,
-      transparent 70%,
-      rgba(255, 255, 255, 0.15) 100%
-    );
-    pointer-events: none;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask-composite: xor;
-    padding: 1px;
-  }
-
-  .content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-  }
-
-  .time {
-    font-size: 56px;
-    font-weight: 300;
-    letter-spacing: -1px;
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-    line-height: 1.1;
-  }
-
-  .time .seconds {
-    font-size: 28px;
-    font-weight: 400;
-    opacity: 0.6;
-    vertical-align: super;
-    margin-left: 2px;
-  }
-
-  .separator {
-    width: 40px;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-    margin: 10px auto;
-  }
-
-  .date {
-    font-size: 16px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    letter-spacing: 0.5px;
-    text-transform: capitalize;
-  }
-
-  /* Subtle pulse animation on the glass */
+  /* ── Shimmer animation ── */
   .shimmer {
+    display: var(--shimmer-show);
     position: absolute;
     top: -50%;
     left: -50%;
     width: 200%;
     height: 200%;
     background: radial-gradient(
-      ellipse at 30% 20%,
-      rgba(255, 255, 255, 0.06) 0%,
-      transparent 60%
+      ellipse at 30% 25%,
+      rgba(255, 255, 255, var(--shimmer-intensity)) 0%,
+      transparent 55%
     );
-    animation: shimmer 8s ease-in-out infinite alternate;
+    animation: shimmer var(--shimmer-speed) ease-in-out infinite alternate;
     pointer-events: none;
+    z-index: 1;
   }
 
   @keyframes shimmer {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    100% { transform: translate(5%, 3%) rotate(2deg); }
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(4%, 2%) rotate(1.5deg); }
+  }
+
+  /* ── Content ── */
+  .content {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+  }
+
+  .time {
+    font-size: var(--time-font-size);
+    font-weight: var(--time-font-weight);
+    letter-spacing: var(--time-letter-spacing);
+    color: var(--time-color);
+    text-shadow: var(--time-text-shadow);
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time .seconds {
+    display: var(--seconds-show);
+    font-size: var(--seconds-font-size);
+    font-weight: 400;
+    opacity: var(--seconds-opacity);
+    vertical-align: super;
+    margin-left: 3px;
+  }
+
+  .time .ampm {
+    font-size: calc(var(--time-font-size) * 0.3);
+    font-weight: 500;
+    opacity: 0.6;
+    margin-left: 6px;
+    vertical-align: baseline;
+  }
+
+  .separator {
+    display: var(--separator-show);
+    width: var(--separator-width);
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--separator-color),
+      transparent
+    );
+    margin: var(--separator-margin) auto;
+  }
+
+  .date {
+    display: var(--date-show);
+    font-size: var(--date-font-size);
+    font-weight: var(--date-font-weight);
+    color: var(--date-color);
+    text-shadow: var(--date-text-shadow);
+    letter-spacing: var(--date-letter-spacing);
+    margin-top: 8px;
   }
 </style>
 </head>
@@ -166,19 +266,45 @@
   <div class="content">
     <div class="time" id="time">00:00<span class="seconds">00</span></div>
     <div class="separator"></div>
-    <div class="date" id="date">Montag, 1. Januar 2026</div>
+    <div class="date" id="date">Montag, 6. April 2026</div>
   </div>
 </div>
 
 <script>
-  const WEEKDAYS = [
-    'Sonntag', 'Montag', 'Dienstag', 'Mittwoch',
-    'Donnerstag', 'Freitag', 'Samstag'
-  ];
-  const MONTHS = [
-    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
-  ];
+  // ── Language data ──
+  const LANG = {
+    de: {
+      weekdays: ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],
+      months: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+      format: (w, d, m, y) => `${w}, ${d}. ${m} ${y}`
+    },
+    en: {
+      weekdays: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+      months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+      format: (w, d, m, y) => `${w}, ${m} ${d}, ${y}`
+    },
+    fr: {
+      weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+      months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+      format: (w, d, m, y) => `${w}, ${d} ${m} ${y}`
+    },
+    es: {
+      weekdays: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+      months: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+      format: (w, d, m, y) => `${w}, ${d} de ${m} de ${y}`
+    }
+  };
+
+  // ── Read CSS custom properties ──
+  const root = getComputedStyle(document.documentElement);
+
+  function getCSSVar(name) {
+    return root.getPropertyValue(name).trim().replace(/"/g, '');
+  }
+
+  const lang = LANG[getCSSVar('--language')] || LANG.de;
+  const timeFormat = parseInt(getCSSVar('--time-format')) || 24;
+  const showSeconds = getCSSVar('--seconds-show') !== 'none';
 
   const timeEl = document.getElementById('time');
   const dateEl = document.getElementById('date');
@@ -189,19 +315,28 @@
 
   function update() {
     const now = new Date();
-
-    const h = pad(now.getHours());
+    let h = now.getHours();
     const m = pad(now.getMinutes());
     const s = pad(now.getSeconds());
 
-    timeEl.innerHTML = `${h}:${m}<span class="seconds">${s}</span>`;
+    let ampm = '';
+    if (timeFormat === 12) {
+      ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+    }
 
-    const weekday = WEEKDAYS[now.getDay()];
+    const hStr = pad(h);
+    const secHTML = showSeconds ? `<span class="seconds">${s}</span>` : '';
+    const ampmHTML = timeFormat === 12 ? `<span class="ampm">${ampm}</span>` : '';
+
+    timeEl.innerHTML = `${hStr}:${m}${secHTML}${ampmHTML}`;
+
+    const weekday = lang.weekdays[now.getDay()];
     const day = now.getDate();
-    const month = MONTHS[now.getMonth()];
+    const month = lang.months[now.getMonth()];
     const year = now.getFullYear();
 
-    dateEl.textContent = `${weekday}, ${day}. ${month} ${year}`;
+    dateEl.textContent = lang.format(weekday, day, month, year);
   }
 
   update();
